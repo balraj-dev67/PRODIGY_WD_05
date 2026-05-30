@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRODIGY_WD_05 – Weather App</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-day: linear-gradient(160deg, #1e3a5f 0%, #2d6a9f 40%, #56a0d3 100%);
+    --bg-night: linear-gradient(160deg, #0d0d2b 0%, #1a1a4e 50%, #2a2a6e 100%);
+    --bg-cloudy: linear-gradient(160deg, #4a5568 0%, #718096 50%, #a0aec0 100%);
+    --bg-rain: linear-gradient(160deg, #1a2a3a 0%, #2d4a6a 50%, #3a6080 100%);
+    --surface: rgba(255,255,255,0.12);
+    --surface2: rgba(255,255,255,0.07);
+    --text: #fff;
+    --muted: rgba(255,255,255,0.65);
+    --accent: #ffd166;
+  }
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    min-height:100vh; font-family:'Nunito',sans-serif; color:var(--text);
+    background: var(--bg-day);
+    transition: background 1s ease;
+    display:flex; flex-direction:column; align-items:center;
+    padding:2rem 1rem 3rem;
+  }
+
+  h1 { font-size:1.2rem; font-weight:800; letter-spacing:0.15em; text-transform:uppercase; opacity:0.7; margin-bottom:2rem; }
+
+  /* SEARCH */
+  .search-bar {
+    display:flex; gap:0.6rem; width:min(520px,95vw); margin-bottom:2rem;
+  }
+  .search-bar input {
+    flex:1; padding:0.9rem 1.4rem; border:none; border-radius:50px;
+    background:var(--surface); backdrop-filter:blur(12px);
+    color:#fff; font-family:'Nunito',sans-serif; font-size:1rem; font-weight:600;
+    outline:none; border:1.5px solid rgba(255,255,255,0.15);
+    transition:border-color 0.2s;
+  }
+  .search-bar input::placeholder { color:rgba(255,255,255,0.4); }
+  .search-bar input:focus { border-color:rgba(255,255,255,0.5); }
+  .search-bar button {
+    padding:0.9rem 1.5rem; border:none; border-radius:50px;
+    background:var(--accent); color:#1a1a2e;
+    font-family:'Nunito',sans-serif; font-weight:800; font-size:0.95rem;
+    cursor:pointer; transition:transform 0.2s, box-shadow 0.2s;
+    box-shadow:0 4px 20px rgba(255,209,102,0.4);
+  }
+  .search-bar button:hover { transform:translateY(-2px); box-shadow:0 8px 28px rgba(255,209,102,0.5); }
+
+  /* LOCATE BTN */
+  .locate-btn {
+    background:var(--surface); border:1.5px solid rgba(255,255,255,0.2);
+    color:#fff; padding:0.6rem 1.4rem; border-radius:50px;
+    font-family:'Nunito',sans-serif; font-size:0.85rem; font-weight:700;
+    cursor:pointer; margin-bottom:2rem; transition:background 0.2s;
+    display:flex; align-items:center; gap:0.5rem;
+  }
+  .locate-btn:hover { background:rgba(255,255,255,0.2); }
+
+  /* CARD */
+  .card {
+    width:min(520px,95vw); background:var(--surface);
+    backdrop-filter:blur(20px); border-radius:28px;
+    border:1px solid rgba(255,255,255,0.15);
+    padding:2.5rem 2rem; margin-bottom:1.2rem;
+    box-shadow:0 20px 60px rgba(0,0,0,0.25);
+    animation: fadeIn 0.5s ease;
+  }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+  /* MAIN WEATHER */
+  .main-weather { text-align:center; }
+  .city { font-size:1.8rem; font-weight:800; margin-bottom:0.2rem; }
+  .date { font-size:0.85rem; color:var(--muted); margin-bottom:1.5rem; }
+  .weather-icon { font-size:5rem; margin-bottom:0.5rem; line-height:1; }
+  .temp { font-size:clamp(4rem,15vw,6rem); font-weight:800; line-height:1; }
+  .temp sup { font-size:2rem; font-weight:400; vertical-align:top; margin-top:0.8rem; display:inline-block; }
+  .condition { font-size:1.1rem; color:var(--muted); margin-top:0.4rem; text-transform:capitalize; }
+  .feels { font-size:0.9rem; color:var(--muted); margin-top:0.3rem; }
+
+  /* STATS GRID */
+  .stats {
+    display:grid; grid-template-columns:repeat(3,1fr); gap:0.8rem; margin-top:2rem;
+  }
+  .stat {
+    background:var(--surface2); border-radius:16px; padding:1rem 0.8rem; text-align:center;
+  }
+  .stat-icon { font-size:1.4rem; margin-bottom:0.3rem; }
+  .stat-val { font-size:1.1rem; font-weight:800; }
+  .stat-label { font-size:0.72rem; color:var(--muted); margin-top:0.2rem; text-transform:uppercase; letter-spacing:0.08em; }
+
+  /* FORECAST */
+  .forecast-grid {
+    display:grid; grid-template-columns:repeat(5,1fr); gap:0.6rem;
+  }
+  .fc-day {
+    background:var(--surface2); border-radius:14px; padding:0.8rem 0.4rem; text-align:center;
+  }
+  .fc-name { font-size:0.75rem; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:0.06em; }
+  .fc-icon { font-size:1.6rem; margin:0.4rem 0; }
+  .fc-hi { font-size:0.95rem; font-weight:800; }
+  .fc-lo { font-size:0.78rem; color:var(--muted); margin-top:0.1rem; }
+
+  /* ERROR / LOADING */
+  .msg { text-align:center; color:var(--muted); padding:2rem; }
+  .error-card { background:rgba(255,80,80,0.15); border:1px solid rgba(255,80,80,0.3); }
+
+  /* DEMO NOTICE */
+  .demo-notice {
+    width:min(520px,95vw); text-align:center;
+    font-size:0.78rem; color:rgba(255,255,255,0.4);
+    margin-top:0.5rem; line-height:1.6;
+  }
+  .demo-notice a { color:var(--accent); }
+</style>
+</head>
+<body>
+
+<h1>⛅ Weather App</h1>
+
+<div class="search-bar">
+  <input id="cityInput" type="text" placeholder="Enter city name…" />
+  <button onclick="searchCity()">Search</button>
+</div>
+<button class="locate-btn" onclick="locateMe()">📍 Use My Location</button>
+
+<div id="output"></div>
+<p class="demo-notice">
+  This demo uses <strong>Open-Meteo</strong> (free, no API key needed) + <strong>Geocoding API</strong>.<br>
+  To use OpenWeatherMap in production, add your API key to the <code>OWM_KEY</code> variable.
+</p>
+
+<script>
+  const output = document.getElementById('output');
+  const cityInput = document.getElementById('cityInput');
+
+  cityInput.addEventListener('keydown', e => { if (e.key==='Enter') searchCity(); });
+
+  const WMO_ICONS = {
+    0:'☀️',1:'🌤️',2:'⛅',3:'☁️',
+    45:'🌫️',48:'🌫️',
+    51:'🌦️',53:'🌦️',55:'🌧️',
+    61:'🌧️',63:'🌧️',65:'🌧️',
+    71:'🌨️',73:'🌨️',75:'❄️',
+    80:'🌦️',81:'🌧️',82:'⛈️',
+    95:'⛈️',96:'⛈️',99:'⛈️'
+  };
+  const WMO_DESC = {
+    0:'Clear Sky',1:'Mainly Clear',2:'Partly Cloudy',3:'Overcast',
+    45:'Foggy',48:'Icy Fog',
+    51:'Light Drizzle',53:'Drizzle',55:'Heavy Drizzle',
+    61:'Light Rain',63:'Moderate Rain',65:'Heavy Rain',
+    71:'Light Snow',73:'Moderate Snow',75:'Heavy Snow',
+    80:'Showers',81:'Rain Showers',82:'Violent Showers',
+    95:'Thunderstorm',96:'Thunderstorm w/ Hail',99:'Severe Thunderstorm'
+  };
+
+  function getBg(code, isDay) {
+    if (!isDay) return 'var(--bg-night)';
+    if ([0,1].includes(code)) return 'var(--bg-day)';
+    if ([2,3,45,48].includes(code)) return 'var(--bg-cloudy)';
+    return 'var(--bg-rain)';
+  }
+
+  function setLoading() {
+    output.innerHTML = `<div class="card"><p class="msg">🔍 Fetching weather…</p></div>`;
+  }
+  function setError(msg) {
+    output.innerHTML = `<div class="card error-card"><p class="msg">${msg}</p></div>`;
+  }
+
+  async function searchCity() {
+    const q = cityInput.value.trim();
+    if (!q) return;
+    setLoading();
+    try {
+      const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=1&language=en&format=json`);
+      const geoData = await geoRes.json();
+      if (!geoData.results || geoData.results.length === 0) { setError('City not found. Try another name.'); return; }
+      const { name, country, latitude, longitude } = geoData.results[0];
+      await fetchWeather(latitude, longitude, `${name}, ${country}`);
+    } catch(e) { setError('Network error. Please try again.'); }
+  }
+
+  async function locateMe() {
+    if (!navigator.geolocation) { setError('Geolocation not supported by your browser.'); return; }
+    setLoading();
+    navigator.geolocation.getCurrentPosition(async pos => {
+      const { latitude, longitude } = pos.coords;
+      try {
+        const revRes = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`);
+        const revData = await revRes.json();
+        const city = revData.address.city || revData.address.town || revData.address.village || 'Your Location';
+        const country = revData.address.country_code?.toUpperCase() || '';
+        await fetchWeather(latitude, longitude, `${city}, ${country}`);
+      } catch { await fetchWeather(latitude, longitude, 'Your Location'); }
+    }, () => setError('Location access denied. Please search manually.'));
+  }
+
+  async function fetchWeather(lat, lon, label) {
+    try {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+        `&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weathercode,is_day` +
+        `&daily=weathercode,temperature_2m_max,temperature_2m_min` +
+        `&timezone=auto&forecast_days=5`;
+      const res = await fetch(url);
+      const d = await res.json();
+      renderWeather(d, label);
+    } catch(e) { setError('Failed to fetch weather data.'); }
+  }
+
+  function renderWeather(d, label) {
+    const c = d.current;
+    const daily = d.daily;
+    const code = c.weathercode;
+    const isDay = c.is_day;
+    document.body.style.background = getBg(code, isDay);
+
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+    const forecastHTML = daily.time.map((t, i) => {
+      const day = i === 0 ? 'Today' : days[new Date(t).getDay()];
+      const wcode = daily.weathercode[i];
+      return `<div class="fc-day">
+        <div class="fc-name">${day}</div>
+        <div class="fc-icon">${WMO_ICONS[wcode]||'🌡️'}</div>
+        <div class="fc-hi">${Math.round(daily.temperature_2m_max[i])}°</div>
+        <div class="fc-lo">${Math.round(daily.temperature_2m_min[i])}°</div>
+      </div>`;
+    }).join('');
+
+    output.innerHTML = `
+      <div class="card">
+        <div class="main-weather">
+          <div class="city">${label}</div>
+          <div class="date">${dateStr}</div>
+          <div class="weather-icon">${WMO_ICONS[code]||'🌡️'}</div>
+          <div class="temp">${Math.round(c.temperature_2m)}<sup>°C</sup></div>
+          <div class="condition">${WMO_DESC[code]||'Unknown'}</div>
+          <div class="feels">Feels like ${Math.round(c.apparent_temperature)}°C</div>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="stat-icon">💧</div><div class="stat-val">${c.relative_humidity_2m}%</div><div class="stat-label">Humidity</div></div>
+          <div class="stat"><div class="stat-icon">💨</div><div class="stat-val">${Math.round(c.wind_speed_10m)} km/h</div><div class="stat-label">Wind</div></div>
+          <div class="stat"><div class="stat-icon">${isDay?'🌞':'🌙'}</div><div class="stat-val">${isDay?'Day':'Night'}</div><div class="stat-label">Time</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="forecast-grid">${forecastHTML}</div>
+      </div>`;
+  }
+
+  // Load default city on start
+  window.addEventListener('load', () => {
+    cityInput.value = 'Mumbai';
+    searchCity();
+  });
+</script>
+</body>
+</html>
